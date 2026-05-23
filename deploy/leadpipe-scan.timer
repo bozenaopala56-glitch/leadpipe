@@ -1,0 +1,11 @@
+[Unit]
+Description=Run leadpipe periodic scan
+
+[Timer]
+OnCalendar=Mon..Fri 06:30
+Persistent=true
+RandomizedDelaySec=10m
+Unit=leadpipe-scan.service
+
+[Install]
+WantedBy=timers.target

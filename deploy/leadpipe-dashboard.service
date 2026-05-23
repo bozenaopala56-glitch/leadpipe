@@ -1,0 +1,19 @@
+[Unit]
+Description=Leadpipe dashboard
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/leadpipe
+EnvironmentFile=/opt/leadpipe/.env
+Environment=HOST=127.0.0.1
+Environment=PORT=8080
+ExecStart=/opt/leadpipe/.venv/bin/python /opt/leadpipe/dashboard/backend.py
+Restart=on-failure
+RestartSec=5
+User=leadpipe
+Group=leadpipe
+
+[Install]
+WantedBy=multi-user.target

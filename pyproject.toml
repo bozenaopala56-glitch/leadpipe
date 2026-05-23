@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "leadpipe"
+version = "0.1.0"
+description = "Contracts and rules engine for T0/T1/T2 lead pipeline."
+requires-python = ">=3.10"
+dependencies = [
+  "pydantic>=2.7,<3",
+  "SQLAlchemy>=2.0,<3",
+  "PyYAML>=6.0,<7",
+  "email-validator>=2.0,<3",
+]
+
+[project.optional-dependencies]
+postgres = ["psycopg[binary]>=3.1,<4"]
+csv = ["pandas>=2.0,<3"]
+test = ["pytest>=8.0,<9"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["leadpipe*"]
+
+[tool.setuptools.package-data]
+leadpipe = ["rules/*.yml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+pythonpath = ["."]

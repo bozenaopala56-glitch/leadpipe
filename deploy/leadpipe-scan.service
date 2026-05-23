@@ -1,0 +1,15 @@
+[Unit]
+Description=Leadpipe periodic scan
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/leadpipe
+EnvironmentFile=/opt/leadpipe/.env
+ExecStart=/usr/bin/bash -lc 'cd /opt/leadpipe && . /opt/leadpipe/.venv/bin/activate && leadpipe import "$PIPELINE_DATA_DIR/imports/leads.csv" --source periodic --batch periodic && leadpipe scan --batch periodic --layers t0,t1,t0_5 --concurrency 10 && leadpipe decide --batch periodic && leadpipe report --batch periodic --output "$PIPELINE_DATA_DIR/reports/periodic.md"'
+User=leadpipe
+Group=leadpipe
+
+[Install]
+WantedBy=multi-user.target

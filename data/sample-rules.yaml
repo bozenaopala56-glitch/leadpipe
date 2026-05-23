@@ -1,0 +1,48 @@
+version: "ruleset-2026-05-23-v1"
+rules:
+  - key: SAMPLE_SUPPRESSION
+    priority: 1
+    conditions:
+      - signal: suppressed
+        operator: eq
+        value: true
+    decision: skip
+    description: "Przykladowa blokada suppression."
+  - key: SAMPLE_REDESIGN_TRUST
+    priority: 10
+    conditions:
+      - signal: ssl_invalid
+        operator: eq
+        value: true
+      - signal: evidence_count
+        operator: gte
+        value: 2
+    decision: send
+    campaign: REDESIGN_TRUST
+    confidence_threshold: 0.78
+    min_evidence: 2
+    subject: "HTTPS i zaufanie na {domena}"
+    description: "Przykladowa kampania redesign trust."
+  - key: SAMPLE_WEIGHTED_TECH_REBUILD
+    priority: 20
+    combine: weighted
+    threshold: 0.5
+    conditions:
+      - signal: speed_slow
+        operator: eq
+        value: true
+        weight: 0.4
+      - signal: old_stack
+        operator: eq
+        value: true
+        weight: 0.4
+      - signal: compression_missing
+        operator: eq
+        value: true
+        weight: 0.2
+    decision: send
+    campaign: TECH_REBUILD
+    confidence_threshold: 0.74
+    min_evidence: 2
+    subject: "Szybkosc strony {firma}"
+    description: "Przykladowa kampania technical rebuild."

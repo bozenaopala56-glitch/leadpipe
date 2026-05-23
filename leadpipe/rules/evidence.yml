@@ -1,0 +1,21 @@
+version: "ruleset-2026-05-23-www-final-v1"
+rules:
+  - key: EVIDENCE_STRONG_ENOUGH
+    priority: 900
+    conditions:
+      - signal: evidence_strength
+        operator: gte
+        value: 70
+      - signal: evidence_count
+        operator: gte
+        value: 2
+    decision: manual_review
+    description: "Dowody sa silne, ale brak dopasowanej kampanii WWW-first przed fallbackiem."
+  - key: EVIDENCE_CONFLICTING
+    priority: 35
+    conditions:
+      - signal: conflicting_evidence
+        operator: eq
+        value: true
+    decision: manual_review
+    description: "Sprzeczne dowody wymagaja recznego sprawdzenia."

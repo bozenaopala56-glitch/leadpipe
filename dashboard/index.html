@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>T0/T0.5/T1/T2 Lead Scoring Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">T</div>
+        <div>
+          <strong>T0 Pipeline</strong>
+          <span>Lead scoring ops</span>
+        </div>
+      </div>
+      <nav class="nav" aria-label="Glowne widoki">
+        <button class="nav-item active" data-view="overview">Dashboard</button>
+        <button class="nav-item" data-view="qa">QA workflow</button>
+        <button class="nav-item" data-view="campaigns">Kampanie</button>
+        <button class="nav-item" data-view="exports">Eksport</button>
+        <button class="nav-item" data-view="batches">Batch</button>
+      </nav>
+      <div class="sidebar-footer">
+        <span class="dot ok"></span>
+        <span id="rulesetLabel">ruleset</span>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">hermes-agent</p>
+          <h1 id="pageTitle">Dashboard</h1>
+        </div>
+        <div class="batch-picker">
+          <label for="batchSelect">Aktywny batch</label>
+          <select id="batchSelect"></select>
+        </div>
+      </header>
+
+      <section id="overview" class="view active">
+        <div class="stat-grid" id="statGrid"></div>
+        <div class="grid two">
+          <section class="panel">
+            <div class="panel-head">
+              <h2>Status batcha</h2>
+              <span id="batchStatusBadge" class="badge info"></span>
+            </div>
+            <div class="progress-wrap">
+              <div class="progress-label">
+                <span id="batchProgressText"></span>
+                <strong id="batchProgressPct"></strong>
+              </div>
+              <div class="progress"><span id="batchProgressBar"></span></div>
+            </div>
+            <div class="mini-metrics" id="batchMiniMetrics"></div>
+          </section>
+          <section class="panel">
+            <div class="panel-head">
+              <h2>Alerty</h2>
+              <span class="badge warning" id="alertCount"></span>
+            </div>
+            <div id="alertsList" class="event-list"></div>
+          </section>
+        </div>
+        <div class="grid three">
+          <section class="panel">
+            <div class="panel-head"><h2>Kampanie per day</h2></div>
+            <canvas id="campaignTrendChart" height="220"></canvas>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><h2>Suppression rate</h2></div>
+            <canvas id="suppressionChart" height="220"></canvas>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><h2>Contactability</h2></div>
+            <canvas id="contactChart" height="220"></canvas>
+          </section>
+        </div>
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Ostatnie decyzje</h2>
+            <button class="ghost" data-jump="qa">Otworz QA</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Firma</th><th>Domena</th><th>Kampania</th><th>Decyzja</th><th>Confidence</th><th>Evidence</th></tr></thead>
+              <tbody id="recentDecisions"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section id="qa" class="view">
+        <section class="panel filters">
+          <input id="searchInput" type="search" placeholder="Szukaj domeny, NIP albo firmy">
+          <select id="campaignFilter"><option value="">Wszystkie kampanie</option></select>
+          <select id="statusFilter">
+            <option value="">Wszystkie statusy</option>
+            <option value="send">send</option>
+            <option value="manual_review">manual_review</option>
+            <option value="skip">skip</option>
+            <option value="retry">retry</option>
+            <option value="t2_required">t2_required</option>
+            <option value="t2_optional">t2_optional</option>
+          </select>
+          <input id="dateFilter" type="date">
+          <input id="domainFilter" type="text" placeholder="Filtr domeny">
+        </section>
+        <div class="qa-layout">
+          <section class="panel lead-list-panel">
+            <div class="panel-head">
+              <h2>Lead QA</h2>
+              <span id="qaCount" class="badge info"></span>
+            </div>
+            <div id="leadList" class="lead-list"></div>
+          </section>
+          <section class="panel detail-panel" id="leadDetail"></section>
+        </div>
+      </section>
+
+      <section id="campaigns" class="view">
+        <div class="grid two">
+          <section class="panel">
+            <div class="panel-head"><h2>Rozklad kampanii</h2></div>
+            <canvas id="campaignDistributionChart" height="260"></canvas>
+          </section>
+          <section class="panel" id="campaignSummaryPanel"></section>
+        </div>
+        <section class="panel">
+          <div class="panel-head"><h2>Kampanie</h2></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Kampania</th><th>Leady</th><th>Avg confidence</th><th>Reply rate</th><th>Manual QA</th></tr></thead>
+              <tbody id="campaignTable"></tbody>
+            </table>
+          </div>
+        </section>
+        <section class="panel">
+          <div class="panel-head"><h2 id="campaignLeadTitle">Leady w kampanii</h2></div>
+          <div id="campaignLeadList" class="compact-list"></div>
+        </section>
+      </section>
+
+      <section id="exports" class="view">
+        <div class="grid two">
+          <section class="panel">
+            <div class="panel-head"><h2>Eksport batcha</h2></div>
+            <div class="export-box">
+              <p id="exportSummary"></p>
+              <button class="primary" id="exportCsvBtn">Export CSV</button>
+            </div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><h2>Import feedback CSV</h2></div>
+            <div class="import-box">
+              <input type="file" id="feedbackInput" accept=".csv,text/csv">
+              <p id="feedbackResult" class="muted"></p>
+            </div>
+          </section>
+        </div>
+        <section class="panel">
+          <div class="panel-head"><h2>Historia eksportow</h2></div>
+          <div id="exportHistory" class="event-list"></div>
+        </section>
+      </section>
+
+      <section id="batches" class="view">
+        <section class="panel">
+          <div class="panel-head"><h2>Batch history</h2></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Batch</th><th>Data</th><th>Status</th><th>Leady</th><th>Progress</th><th>Akcja</th></tr></thead>
+              <tbody id="batchTable"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

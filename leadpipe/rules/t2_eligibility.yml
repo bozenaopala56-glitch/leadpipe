@@ -1,0 +1,85 @@
+version: "ruleset-2026-05-23-www-final-v1"
+rules:
+  - key: T2_SKIP_NO_CONTACT
+    priority: 120
+    conditions:
+      - signal: contactability
+        operator: lt
+        value: 40
+    decision: skip_t2
+    description: "Brak realnego kontaktu blokuje koszt T2."
+
+  - key: T2_SKIP_STRONG_CAMPAIGN
+    priority: 121
+    conditions:
+      - signal: campaign_confidence
+        operator: gte
+        value: 0.82
+      - signal: evidence_count
+        operator: gte
+        value: 2
+    decision: manual_review
+    description: "Kampania ma wystarczajaco mocne dowody bez T2; MVP kieruje do QA."
+
+  - key: T2_MUST_AMBIGUOUS_HOOK
+    priority: 310
+    conditions:
+      - signal: t0_confidence
+        operator: gte
+        value: 0.70
+      - signal: t1_confidence
+        operator: lt
+        value: 0.70
+      - signal: evidence_count
+        operator: lt
+        value: 2
+    decision: t2_required
+    description: "T0 widzi problem, ale T1 nie umie okreslic bezpiecznego hooka."
+
+  - key: T2_MUST_VISUAL_DECISION_BLOCKER
+    priority: 311
+    conditions:
+      - signal: visual_claim_needed
+        operator: eq
+        value: true
+      - signal: campaign_confidence
+        operator: lt
+        value: 0.76
+      - signal: industry_fit
+        operator: gte
+        value: 60
+      - signal: contactability
+        operator: gte
+        value: 55
+    decision: t2_required
+    description: "Claim dotyczy wygladu, CTA, mobile lub trust i wymaga screenshotu."
+
+  - key: T2_MUST_CAMPAIGN_TIE
+    priority: 312
+    conditions:
+      - signal: campaign_tie_delta
+        operator: lte
+        value: 8
+      - signal: lead_value
+        operator: gte
+        value: 70
+      - signal: contactability
+        operator: gte
+        value: 55
+    decision: t2_required
+    description: "Dwie kampanie sa blisko i lead ma wysoka wartosc."
+
+  - key: T2_MUST_CONFLICTING_EVIDENCE
+    priority: 313
+    conditions:
+      - signal: conflicting_evidence
+        operator: eq
+        value: true
+      - signal: status_active
+        operator: eq
+        value: true
+      - signal: industry_fit
+        operator: gte
+        value: 60
+    decision: t2_required
+    description: "T0/T1 sa sprzeczne dla aktywnej strony i potrzebny jest obraz."

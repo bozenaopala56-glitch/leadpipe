@@ -1,0 +1,18 @@
+version: "ruleset-2026-05-23-www-final-v1"
+rules:
+  - key: FEEDBACK_OPT_OUT
+    priority: 15
+    conditions:
+      - signal: latest_event
+        operator: eq
+        value: opt_out
+    decision: skip
+    description: "Feedback opt-out tworzy blokade."
+  - key: FEEDBACK_MEETING
+    priority: 16
+    conditions:
+      - signal: latest_event
+        operator: eq
+        value: meeting
+    decision: skip
+    description: "Po spotkaniu lead nie dostaje nowych kampanii."

@@ -1,0 +1,231 @@
+version: "ruleset-2026-05-23-www-final-v1"
+rules:
+  - key: CAMPAIGN_REDESIGN_ADS_WASTE
+    priority: 401
+    combine: weighted
+    threshold: 0.65
+    conditions:
+      - signal: gtm_detected
+        operator: eq
+        value: true
+        weight: 0.20
+      - signal: meta_pixel_detected
+        operator: eq
+        value: true
+        weight: 0.20
+      - signal: utm_or_landing_hint
+        operator: eq
+        value: true
+        weight: 0.20
+      - signal: speed_slow
+        operator: eq
+        value: true
+        weight: 0.20
+      - signal: weak_cta
+        operator: eq
+        value: true
+        weight: 0.20
+    decision: send
+    campaign: REDESIGN_ADS_WASTE
+    confidence_threshold: 0.80
+    min_evidence: 3
+    subject: "Czy strona {domena} wykorzystuje ruch z reklam?"
+    description: "Tracking lub landing hints plus dowod, ze strona moze marnowac ruch."
+
+  - key: CAMPAIGN_REDESIGN_OUTDATED
+    priority: 402
+    combine: or
+    conditions:
+      - signal: visual_outdated
+        operator: eq
+        value: true
+      - signal: viewport_missing
+        operator: eq
+        value: true
+      - signal: legacy_html
+        operator: eq
+        value: true
+      - signal: table_layout
+        operator: eq
+        value: true
+      - signal: not_mobile_friendly
+        operator: eq
+        value: true
+    decision: send
+    campaign: REDESIGN_OUTDATED
+    confidence_threshold: 0.76
+    min_evidence: 2
+    subject: "Pierwsze wrazenie na stronie {domena}"
+    description: "Strona aktywna ma sygnaly przestarzalego designu, RWD albo struktury."
+
+  - key: CAMPAIGN_REDESIGN_CONVERSION
+    priority: 403
+    combine: weighted
+    threshold: 0.55
+    conditions:
+      - signal: cta_missing
+        operator: eq
+        value: true
+        weight: 0.30
+      - signal: weak_cta
+        operator: eq
+        value: true
+        weight: 0.30
+      - signal: form_missing
+        operator: eq
+        value: true
+        weight: 0.20
+      - signal: contact_hidden
+        operator: eq
+        value: true
+        weight: 0.20
+      - signal: speed_slow
+        operator: eq
+        value: true
+        weight: 0.15
+    decision: send
+    campaign: REDESIGN_CONVERSION
+    confidence_threshold: 0.74
+    min_evidence: 2
+    subject: "Zapytania ze strony {firma}"
+    description: "Strona dziala, ale CTA, formularz, kontakt albo performance ograniczaja zapytania."
+
+  - key: CAMPAIGN_REDESIGN_TRUST
+    priority: 404
+    combine: weighted
+    threshold: 0.60
+    conditions:
+      - signal: https_missing
+        operator: eq
+        value: true
+        weight: 0.30
+      - signal: ssl_invalid
+        operator: eq
+        value: true
+        weight: 0.30
+      - signal: cert_expired
+        operator: eq
+        value: true
+        weight: 0.30
+      - signal: low_trust
+        operator: eq
+        value: true
+        weight: 0.25
+      - signal: company_identity_missing
+        operator: eq
+        value: true
+        weight: 0.15
+      - signal: form_present
+        operator: eq
+        value: true
+        weight: 0.10
+    decision: send
+    campaign: REDESIGN_TRUST
+    confidence_threshold: 0.76
+    min_evidence: 2
+    subject: "Zaufanie klienta na {domena}"
+    description: "Trust/security jest argumentem przebudowy strony, nie osobna kampania techniczna."
+
+  - key: CAMPAIGN_WORDPRESS_REWORK
+    priority: 405
+    combine: weighted
+    threshold: 0.60
+    conditions:
+      - signal: wordpress_detected
+        operator: eq
+        value: true
+        weight: 0.30
+      - signal: cms_detected
+        operator: eq
+        value: true
+        weight: 0.20
+      - signal: wordpress_poor_template
+        operator: eq
+        value: true
+        weight: 0.30
+      - signal: old_assets
+        operator: eq
+        value: true
+        weight: 0.15
+      - signal: speed_slow
+        operator: eq
+        value: true
+        weight: 0.15
+      - signal: plugin_risk_hint
+        operator: eq
+        value: true
+        weight: 0.10
+    decision: send
+    campaign: WORDPRESS_REWORK
+    confidence_threshold: 0.74
+    min_evidence: 2
+    subject: "Odswiezenie strony {domena} bez WordPressa"
+    description: "WordPress/CMS plus realny problem wygladu, performance albo utrzymania."
+
+  - key: CAMPAIGN_MOBILE_REBUILD
+    priority: 406
+    combine: weighted
+    threshold: 0.60
+    conditions:
+      - signal: not_mobile_friendly
+        operator: eq
+        value: true
+        weight: 0.35
+      - signal: viewport_missing
+        operator: eq
+        value: true
+        weight: 0.25
+      - signal: mobile_layout_broken
+        operator: eq
+        value: true
+        weight: 0.30
+      - signal: tap_targets_bad
+        operator: eq
+        value: true
+        weight: 0.15
+      - signal: mobile_text_unreadable
+        operator: eq
+        value: true
+        weight: 0.15
+    decision: send
+    campaign: MOBILE_REBUILD
+    confidence_threshold: 0.76
+    min_evidence: 2
+    subject: "Wersja mobilna strony {domena}"
+    description: "Strona istnieje, ale doswiadczenie na telefonie wymaga przebudowy."
+
+  - key: CAMPAIGN_TECH_REBUILD
+    priority: 407
+    combine: weighted
+    threshold: 0.60
+    conditions:
+      - signal: speed_slow
+        operator: eq
+        value: true
+        weight: 0.30
+      - signal: old_stack
+        operator: eq
+        value: true
+        weight: 0.25
+      - signal: old_assets
+        operator: eq
+        value: true
+        weight: 0.20
+      - signal: cache_missing
+        operator: eq
+        value: true
+        weight: 0.15
+      - signal: compression_missing
+        operator: eq
+        value: true
+        weight: 0.15
+      - signal: html_too_large
+        operator: eq
+        value: true
+        weight: 0.15
+    decision: send
+    campaign: TECH_REBUILD
+    confidence_threshold: 0.74
+    min_evidence: 2
+    subject: "Techniczna przebudowa strony {firma}"
+    description: "Strona dziala, ale wolny/stary stack ogranicza utrzymanie i konwersje."

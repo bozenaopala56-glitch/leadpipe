@@ -1,0 +1,77 @@
+[
+  {
+    "input_domain": "https://www.alfa-produkcja.pl/",
+    "normalized_domain": "alfa-produkcja.pl",
+    "company_name": "Alfa Produkcja",
+    "contact_email": "biuro@alfa-produkcja.pl",
+    "signals": {
+      "ssl_invalid": true,
+      "cert_expired": true,
+      "low_trust": true,
+      "campaign_confidence": 0.81,
+      "contactability": 80,
+      "industry_fit": 78,
+      "lead_value": 72,
+      "evidence_count": 2,
+      "evidence_strength": 82
+    }
+  },
+  {
+    "input_domain": "beta-meble.pl",
+    "normalized_domain": "beta-meble.pl",
+    "company_name": "Beta Meble",
+    "contact_email": "kontakt@beta-meble.pl",
+    "signals": {
+      "speed_slow": true,
+      "old_stack": true,
+      "old_assets": true,
+      "compression_missing": true,
+      "campaign_confidence": 0.78,
+      "contactability": 75,
+      "industry_fit": 82,
+      "lead_value": 69,
+      "evidence_count": 3,
+      "evidence_strength": 76
+    }
+  },
+  {
+    "input_domain": "gamma-serwis.pl",
+    "normalized_domain": "gamma-serwis.pl",
+    "company_name": "Gamma Serwis",
+    "signals": {
+      "contactability": 30,
+      "industry_fit": 70,
+      "lead_value": 65,
+      "evidence_count": 1
+    }
+  },
+  {
+    "input_domain": "delta-export.pl",
+    "normalized_domain": "delta-export.pl",
+    "company_name": "Delta Export",
+    "contact_email": "office@delta-export.pl",
+    "signals": {
+      "t0_confidence": 0.78,
+      "t1_confidence": 0.42,
+      "campaign_confidence": 0.60,
+      "contactability": 80,
+      "industry_fit": 88,
+      "lead_value": 86,
+      "evidence_count": 1,
+      "evidence_strength": 50
+    }
+  },
+  {
+    "input_domain": "epsilon.pl",
+    "normalized_domain": "epsilon.pl",
+    "company_name": "Epsilon",
+    "contact_email": "hello@epsilon.pl",
+    "signals": {
+      "suppressed": true,
+      "contactability": 90,
+      "industry_fit": 90,
+      "lead_value": 90,
+      "evidence_count": 3
+    }
+  }
+]

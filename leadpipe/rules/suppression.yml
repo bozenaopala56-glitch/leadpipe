@@ -1,0 +1,26 @@
+version: "ruleset-2026-05-23-www-final-v1"
+rules:
+  - key: SUPPRESSION_HARD_BOUNCE
+    priority: 20
+    conditions:
+      - signal: hard_bounce_active
+        operator: eq
+        value: true
+    decision: skip
+    description: "Aktywny hard bounce blokuje kontakt."
+  - key: SUPPRESSION_ACTIVE_CUSTOMER
+    priority: 21
+    conditions:
+      - signal: active_customer
+        operator: eq
+        value: true
+    decision: skip
+    description: "Obecny klient nie trafia do kampanii cold outreach."
+  - key: SUPPRESSION_COOLDOWN
+    priority: 22
+    conditions:
+      - signal: cooldown_active
+        operator: eq
+        value: true
+    decision: skip
+    description: "Cooldown po poprzednim kontakcie nadal trwa."

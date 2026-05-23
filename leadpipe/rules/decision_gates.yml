@@ -1,0 +1,115 @@
+version: "ruleset-2026-05-23-www-final-v1"
+rules:
+  - key: GATE_COMPLIANCE_OPT_OUT
+    priority: 1
+    conditions:
+      - signal: opt_out
+        operator: eq
+        value: true
+    decision: skip
+    description: "Opt-out blokuje eksport natychmiast."
+  - key: GATE_COMPLIANCE_SUPPRESSION
+    priority: 2
+    conditions:
+      - signal: suppressed
+        operator: eq
+        value: true
+    decision: skip
+    description: "Aktywna suppression blokuje lead."
+  - key: GATE_DATA_QUALITY_INVALID_INPUT
+    priority: 3
+    combine: and
+    conditions:
+      - signal: domain_present
+        operator: eq
+        value: false
+    decision: skip
+    description: "Brak domeny po normalizacji."
+  - key: GATE_DATA_QUALITY_NOT_COMPANY
+    priority: 4
+    conditions:
+      - signal: not_company_confidence
+        operator: gte
+        value: 0.75
+    decision: skip
+    description: "Lead wyglada jak katalog, portal albo prywatna strona."
+  - key: GATE_DATA_QUALITY_COUNTRY_FIT
+    priority: 5
+    conditions:
+      - signal: country_fit
+        operator: eq
+        value: false
+      - signal: country_confidence
+        operator: gte
+        value: 0.75
+    decision: skip
+    description: "Brak dopasowania do rynku PL."
+  - key: GATE_INDUSTRY_FIT_EXCLUSION
+    priority: 6
+    conditions:
+      - signal: competitor_confidence
+        operator: gte
+        value: 0.85
+    decision: skip
+    description: "Branza konkurencyjna lub wykluczona."
+  - key: GATE_SCAN_HEALTH_RETRY
+    priority: 7
+    conditions:
+      - signal: transient_scan_error
+        operator: eq
+        value: true
+      - signal: retry_count
+        operator: lte
+        value: 1
+    decision: retry
+    description: "Blad przejsciowy kwalifikuje lead do retry."
+  - key: GATE_SCAN_HEALTH_FAILED_FINAL
+    priority: 8
+    conditions:
+      - signal: scan_failed_final
+        operator: eq
+        value: true
+      - signal: lead_value
+        operator: gte
+        value: 75
+    decision: manual_review
+    description: "Wartosciowy lead z finalnie nieudanym skanem wymaga recznego sprawdzenia."
+  - key: GATE_CONTACTABILITY_SKIP
+    priority: 9
+    conditions:
+      - signal: contactability
+        operator: lt
+        value: 40
+    decision: skip
+    description: "Kontaktowalnosc ponizej minimum."
+  - key: GATE_CONTACTABILITY_MANUAL
+    priority: 10
+    conditions:
+      - signal: contactability
+        operator: lt
+        value: 55
+    decision: manual_review
+    description: "Kontaktowalnosc wymaga recznego sprawdzenia."
+  - key: GATE_EVIDENCE_AND_T2_MINIMUM
+    priority: 300
+    conditions:
+      - signal: campaign_candidate
+        operator: exists
+      - signal: evidence_count
+        operator: lt
+        value: 1
+    decision: manual_review
+    description: "Kampania bez minimalnego dowodu nie idzie do wysylki."
+  - key: GATE_CAMPAIGN_READY_MANUAL_QA
+    priority: 390
+    conditions:
+      - signal: campaign_candidate
+        operator: exists
+      - signal: campaign_confidence
+        operator: gte
+        value: 0.65
+      - signal: evidence_count
+        operator: gte
+        value: 2
+    decision: manual_review
+    description: "Kampania jest gotowa logicznie, ale MVP wymaga recznego QA."
