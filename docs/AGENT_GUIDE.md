@@ -61,6 +61,7 @@ leadpipe/
 │   │   ├── ssl.py                   # TLS/SSL: cert validity, issuer, expiry
 │   │   ├── html.py                  # HTML: viewport, title, OG, forms, CTA
 │   │   ├── tech.py                  # Tech detection: WordPress, GTM, Meta Pixel
+│   │   ├── url.py                   # URL normalization and parsing
 │   │   └── performance.py           # TTFB, page size, gzip, cache headers
 │   │
 │   ├── t0_5/                          # ENRICHMENT BIZNESOWY
@@ -102,7 +103,8 @@ leadpipe/
 │
 ├── data/
 │   ├── sample-batch.csv             # Przykładowy CSV do testów
-│   └── sample-leads-for-test.json   # Przykładowe leady do testów
+│   ├── sample-leads-for-test.json   # Przykładowe leady do testów
+│   └── sample-rules.yaml            # Przykładowe rulesety do testów
 │
 └── docs/
     ├── API_REFERENCE.md             # Dokumentacja API (modeli Pydantic)
@@ -133,6 +135,7 @@ leadpipe/
 - ✅ SSL/TLS (validity, issuer, expiry)
 - ✅ HTML (viewport, title, OG, forms, CTA)
 - ✅ Tech detection (WordPress, Joomla, GTM, Meta Pixel)
+- ✅ URL normalization and parsing
 - ✅ Performance (TTFB, page size, gzip, cache)
 - ✅ Batch runner z timeoutami i retry
 
