@@ -65,8 +65,7 @@ def enrich_nip(lead: Lead | dict[str, Any], html_text: str = "", lookup: Any | N
             if lookup_nip and is_valid_nip(lookup_nip):
                 nip = lookup_nip
             result = {"nip": nip, "nip_valid": bool(nip and is_valid_nip(nip))}
-            result.update({key: value for key, value in lookup_result.items() if value is not None})
-            result["nip"] = normalize_nip(result.get("nip") or nip)
+            result.update({key: value for key, value in lookup_result.items() if key != "nip" and value is not None})
             return result
     if not nip:
         return {"nip_valid": False}

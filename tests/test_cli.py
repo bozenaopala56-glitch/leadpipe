@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 
-from leadpipe.cli import main
+from leadpipe.cli import _decision_signals, main
 
 
 def test_cli_import_scan_decide_pipeline_with_local_state(tmp_path, monkeypatch, capsys) -> None:
@@ -30,3 +30,26 @@ def test_cli_import_scan_decide_pipeline_with_local_state(tmp_path, monkeypatch,
     assert main(["pipeline", "1", "--file", str(csv_path)]) == 0
     piped = capsys.readouterr().out
     assert "pipeline_done=1" in piped
+
+
+def test_cli_recovers_from_invalid_state_shape(tmp_path, monkeypatch, capsys) -> None:
+    state_path = tmp_path / "state.json"
+    state_path.write_text("[]", encoding="utf-8")
+    csv_path = tmp_path / "leads.csv"
+    csv_path.write_text("domain\nexample.pl\n", encoding="utf-8")
+    monkeypatch.setenv("LEADPIPE_STATE", str(state_path))
+
+    assert main(["import", str(csv_path)]) == 0
+
+    imported = capsys.readouterr().out
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    assert "imported=1" in imported
+    assert len(state["leads"]) == 1
+
+
+def test_decision_signals_counts_unhashable_values() -> None:
+    state = {"scans": {"lead-1": {"t1": {"signals": {"items": ["a"], "details": {"x": True}, "empty": []}}}}}
+
+    signals = _decision_signals(state, "lead-1")
+
+    assert signals["evidence_count"] == 2

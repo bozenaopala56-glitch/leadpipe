@@ -26,8 +26,13 @@ class EnrichmentCache:
     def _save(self) -> None:
         if not self.path:
             return
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(json.dumps(self._data, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8")
+        try:
+            self.path.parent.mkdir(parents=True, exist_ok=True)
+            temp_path = self.path.with_suffix(f"{self.path.suffix}.tmp")
+            temp_path.write_text(json.dumps(self._data, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8")
+            temp_path.replace(self.path)
+        except OSError:
+            return
 
     def get(self, key: str) -> dict[str, Any] | None:
         entry = self._data.get(key)
@@ -35,6 +40,7 @@ class EnrichmentCache:
             return None
         created_at = float(entry.get("created_at") or 0)
         if time.time() - created_at > self.ttl_seconds:
+            self._data.pop(key, None)
             return None
         value = entry.get("value")
         return value if isinstance(value, dict) else None

@@ -9,9 +9,23 @@ from .industry import classify_industry
 from .jsonld import extract_jsonld
 
 
+def _append_unique(values: list[str], candidate: object) -> None:
+    text = str(candidate or "").strip()
+    if text and text not in values:
+        values.append(text)
+
+
 def run_t1(html_text: str, headers: dict[str, str] | None = None) -> dict[str, Any]:
     jsonld = extract_jsonld(html_text)
     contacts = extract_contacts(html_text)
+    organization = jsonld.get("organization") or {}
+    if isinstance(organization, dict):
+        _append_unique(contacts["emails"], str(organization.get("email") or "").lower())
+        _append_unique(contacts["phones"], organization.get("telephone"))
+        contacts["contactability"] = min(
+            100,
+            (45 if contacts["emails"] else 0) + (35 if contacts["phones"] else 0) + (20 if contacts["social"] else 0),
+        )
     forms = analyze_forms(html_text)
     ctas = analyze_ctas(html_text)
     industry = classify_industry(html_text)
@@ -36,7 +50,9 @@ def run_t1(html_text: str, headers: dict[str, str] | None = None) -> dict[str, A
         "industry_fit": industry["industry_fit"],
         "lead_value": industry["lead_value"],
         "competitor": industry["competitor"],
+        "competitor_confidence": industry["competitor_confidence"],
         "t1_confidence": t1_confidence,
+        "campaign_confidence": t1_confidence,
     }
     return {
         "headers": headers or {},

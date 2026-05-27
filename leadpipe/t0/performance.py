@@ -6,11 +6,21 @@ from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
+from .url import is_http_url
+
 
 def scan_performance(url: str) -> dict[str, Any]:
     """Mierzy TTFB, rozmiar, kompresje.
     Zwraca: {ttfb_ms, page_size_bytes, gzip_enabled, cache_headers}
     """
+    if not is_http_url(url):
+        return {
+            "ttfb_ms": None,
+            "page_size_bytes": 0,
+            "gzip_enabled": False,
+            "cache_headers": {},
+            "error": "unsupported URL scheme",
+        }
     request = Request(url, headers={"User-Agent": "leadpipe-t0/0.1", "Accept-Encoding": "gzip"})
     started = time.perf_counter()
     try:

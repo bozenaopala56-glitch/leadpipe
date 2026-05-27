@@ -78,3 +78,19 @@ def test_run_t1_aggregates_structured_data_and_signals() -> None:
     assert result["signals"]["form_present"] is True
     assert result["signals"]["industry_fit"] >= 70
     assert result["signals"]["t1_confidence"] >= 0.7
+    assert result["signals"]["campaign_confidence"] == result["signals"]["t1_confidence"]
+
+
+def test_run_t1_uses_jsonld_contact_when_visible_contact_is_missing() -> None:
+    html = """
+    <script type="application/ld+json">
+    {"@type":"Organization","email":"biuro@example.pl","telephone":"+48 22 123 45 67"}
+    </script>
+    """
+
+    result = run_t1(html)
+
+    assert "biuro@example.pl" in result["contacts"]["emails"]
+    assert "+48 22 123 45 67" in result["contacts"]["phones"]
+    assert result["signals"]["has_email"] is True
+    assert result["signals"]["has_phone"] is True

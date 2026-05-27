@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from importlib.resources import files
 from pathlib import Path
+from collections.abc import Container
 from typing import Any
 from uuid import UUID
 
@@ -52,6 +53,13 @@ class RuleMatch:
     score: float
 
 
+def _to_float(value: Any) -> float | None:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
 class DecisionEngine:
     def __init__(self, rules_dir: str | Path | None = None) -> None:
         self.rules_dir = Path(rules_dir) if rules_dir else Path(str(files("leadpipe").joinpath("rules")))
@@ -78,13 +86,14 @@ class DecisionEngine:
         context.update(signals or {})
 
         trace = DecisionTrace(lead_id=lead_model.id, ruleset_version=self.ruleset_version)
+        campaign_confidence = _to_float(context.get("campaign_confidence")) or 0.0
         trace.set_score_breakdown(
-            evidence_strength=float(context.get("evidence_strength", 0) or 0),
-            signal_confidence=float(context.get("signal_confidence", context.get("campaign_confidence", 0) * 100) or 0),
-            contactability=float(context.get("contactability", 0) or 0),
-            industry_fit=float(context.get("industry_fit", 0) or 0),
-            lead_value=float(context.get("lead_value", 0) or 0),
-            penalties=float(context.get("penalties", 0) or 0),
+            evidence_strength=_to_float(context.get("evidence_strength")) or 0.0,
+            signal_confidence=_to_float(context.get("signal_confidence")) or campaign_confidence * 100,
+            contactability=_to_float(context.get("contactability")) or 0.0,
+            industry_fit=_to_float(context.get("industry_fit")) or 0.0,
+            lead_value=_to_float(context.get("lead_value")) or 0.0,
+            penalties=_to_float(context.get("penalties")) or 0.0,
         )
 
         matched: RuleMatch | None = None
@@ -154,9 +163,9 @@ class DecisionEngine:
         if not matched:
             reason = f"Nie spelniono: {details}"
         if rule.confidence_threshold is not None:
-            confidence = float(context.get("campaign_confidence", score) or 0)
+            confidence = _to_float(context.get("campaign_confidence")) or score
             matched = matched and confidence >= rule.confidence_threshold
-        min_evidence = int(context.get("evidence_count", 0) or 0)
+        min_evidence = int(_to_float(context.get("evidence_count")) or 0)
         if rule.min_evidence:
             matched = matched and min_evidence >= rule.min_evidence
         return matched, reason, score
@@ -174,19 +183,27 @@ class DecisionEngine:
         elif op == "neq":
             result = actual != expected
         elif op == "in":
-            result = actual in expected
+            result = isinstance(expected, Container) and not isinstance(expected, (str, bytes)) and actual in expected
         elif op == "contains":
-            result = expected in (actual or [])
+            result = isinstance(actual, Container) and expected in actual
         elif op in {"gte", "gt", "lte", "lt"} and actual is None:
             result = False
         elif op == "gte":
-            result = float(actual) >= float(expected)
+            actual_number = _to_float(actual)
+            expected_number = _to_float(expected)
+            result = actual_number is not None and expected_number is not None and actual_number >= expected_number
         elif op == "gt":
-            result = float(actual) > float(expected)
+            actual_number = _to_float(actual)
+            expected_number = _to_float(expected)
+            result = actual_number is not None and expected_number is not None and actual_number > expected_number
         elif op == "lte":
-            result = float(actual) <= float(expected)
+            actual_number = _to_float(actual)
+            expected_number = _to_float(expected)
+            result = actual_number is not None and expected_number is not None and actual_number <= expected_number
         elif op == "lt":
-            result = float(actual) < float(expected)
+            actual_number = _to_float(actual)
+            expected_number = _to_float(expected)
+            result = actual_number is not None and expected_number is not None and actual_number < expected_number
         else:
             raise ValueError(f"Unsupported operator: {op}")
         return result, f"{condition.signal} {op} {expected} (actual={actual})"

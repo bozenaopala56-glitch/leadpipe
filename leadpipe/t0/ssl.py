@@ -5,6 +5,8 @@ import ssl
 from datetime import datetime, timezone
 from typing import Any
 
+from .url import normalize_host
+
 
 def _issuer_name(cert: dict[str, Any]) -> str | None:
     issuer = cert.get("issuer") or ()
@@ -20,7 +22,10 @@ def _expires_days(cert: dict[str, Any]) -> int | None:
     not_after = cert.get("notAfter")
     if not not_after:
         return None
-    expires_at = datetime.strptime(not_after, "%b %d %H:%M:%S %Y %Z").replace(tzinfo=timezone.utc)
+    try:
+        expires_at = datetime.strptime(not_after, "%b %d %H:%M:%S %Y %Z").replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
     return (expires_at - datetime.now(timezone.utc)).days
 
 
@@ -29,7 +34,7 @@ def scan_ssl(domain: str) -> dict[str, Any]:
     Zwraca: {valid, expires_days, issuer, hostname_match}
     Obsluga: timeout 5s, brak HTTPS -> {valid: false, https_missing: true}.
     """
-    host = domain.strip().removeprefix("http://").removeprefix("https://").split("/")[0]
+    host = normalize_host(domain)
     result: dict[str, Any] = {
         "valid": False,
         "expires_days": None,
@@ -40,6 +45,10 @@ def scan_ssl(domain: str) -> dict[str, Any]:
         "ssl_invalid": False,
         "error": None,
     }
+    if not host:
+        result["https_missing"] = True
+        result["error"] = "missing domain"
+        return result
 
     try:
         context = ssl.create_default_context()
@@ -57,13 +66,13 @@ def scan_ssl(domain: str) -> dict[str, Any]:
             }
         )
         return result
+    except ssl.SSLError as exc:
+        result["ssl_invalid"] = True
+        result["error"] = str(exc)
     except (socket.timeout, ConnectionRefusedError, OSError) as exc:
         result["https_missing"] = True
         result["error"] = str(exc)
         return result
-    except ssl.SSLError as exc:
-        result["ssl_invalid"] = True
-        result["error"] = str(exc)
 
     try:
         context = ssl._create_unverified_context()

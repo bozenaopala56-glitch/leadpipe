@@ -66,9 +66,16 @@ T = TypeVar("T", bound=CsvModel)
 
 
 def _read_rows(path_or_text: str | Path) -> list[dict[str, str]]:
-    if isinstance(path_or_text, Path) or Path(str(path_or_text)).exists():
-        with Path(path_or_text).open(newline="", encoding="utf-8-sig") as handle:
+    if isinstance(path_or_text, Path):
+        with path_or_text.open(newline="", encoding="utf-8-sig") as handle:
             return list(csv.DictReader(handle))
+    try:
+        candidate_path = Path(path_or_text)
+        if "\n" not in path_or_text and candidate_path.exists():
+            with candidate_path.open(newline="", encoding="utf-8-sig") as handle:
+                return list(csv.DictReader(handle))
+    except OSError:
+        pass
     return list(csv.DictReader(StringIO(str(path_or_text))))
 
 

@@ -14,6 +14,10 @@ from .t0_5 import run_t0_5
 from .t1 import run_t1
 
 
+def _empty_state() -> dict[str, Any]:
+    return {"leads": [], "scans": {}, "decisions": {}}
+
+
 def _state_path() -> Path:
     return Path(os.environ.get("LEADPIPE_STATE", ".leadpipe/state.json"))
 
@@ -21,18 +25,29 @@ def _state_path() -> Path:
 def _load_state() -> dict[str, Any]:
     path = _state_path()
     if not path.exists():
-        return {"leads": [], "scans": {}, "decisions": {}}
+        return _empty_state()
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
-        payload = {}
-    return {"leads": payload.get("leads", []), "scans": payload.get("scans", {}), "decisions": payload.get("decisions", {})}
+    except (OSError, json.JSONDecodeError):
+        return _empty_state()
+    if not isinstance(payload, dict):
+        return _empty_state()
+    leads = payload.get("leads", [])
+    scans = payload.get("scans", {})
+    decisions = payload.get("decisions", {})
+    return {
+        "leads": leads if isinstance(leads, list) else [],
+        "scans": scans if isinstance(scans, dict) else {},
+        "decisions": decisions if isinstance(decisions, dict) else {},
+    }
 
 
 def _save_state(state: dict[str, Any]) -> None:
     path = _state_path()
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(state, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8")
+    temp_path = path.with_suffix(f"{path.suffix}.tmp")
+    temp_path.write_text(json.dumps(state, ensure_ascii=False, indent=2, sort_keys=True), encoding="utf-8")
+    temp_path.replace(path)
 
 
 def _lead_from_import(record: ImportCsvSchema) -> Lead:
@@ -50,14 +65,24 @@ def _lead_from_import(record: ImportCsvSchema) -> Lead:
 
 def _find_leads(state: dict[str, Any], selector: str, limit: int | None = None) -> list[Lead]:
     raw_leads = state.get("leads", [])
+    if not isinstance(raw_leads, list):
+        return []
     if selector == "batch":
         selected = raw_leads[:limit] if limit else raw_leads
     else:
-        selected = [item for item in raw_leads if item.get("id") == selector]
-    return [Lead.model_validate(item) for item in selected]
+        selected = [item for item in raw_leads if isinstance(item, dict) and item.get("id") == selector]
+    leads: list[Lead] = []
+    for item in selected:
+        try:
+            leads.append(Lead.model_validate(item))
+        except ValueError:
+            continue
+    return leads
 
 
 def _store_lead(state: dict[str, Any], lead: Lead) -> None:
+    if not isinstance(state.get("leads"), list):
+        state["leads"] = []
     dumped = lead.model_dump(mode="json")
     for index, item in enumerate(state["leads"]):
         if item.get("id") == dumped["id"]:
@@ -112,7 +137,7 @@ def _decision_signals(state: dict[str, Any], lead_id: str) -> dict[str, Any]:
     signals.update((scan.get("t0") or {}).get("signals") or {})
     signals.update((scan.get("t0_5") or {}).get("signals") or {})
     signals.update((scan.get("t1") or {}).get("signals") or {})
-    signals.setdefault("evidence_count", sum(1 for value in signals.values() if value not in {False, None, "", 0}))
+    signals.setdefault("evidence_count", sum(1 for value in signals.values() if value not in (False, None, "", 0, [], {})))
     return signals
 
 

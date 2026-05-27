@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from hashlib import sha256
 from typing import Any
 
 from leadpipe.models import Lead
@@ -11,7 +12,8 @@ from .enrich_vat import enrich_vat
 
 def _cache_key(lead: Lead, html_text: str) -> str:
     identity = lead.nip or lead.normalized_domain or lead.input_domain
-    return f"t0_5:{identity}:{hash(html_text)}"
+    html_hash = sha256((html_text or "").encode("utf-8", errors="replace")).hexdigest()
+    return f"t0_5:{identity}:{html_hash}"
 
 
 def run_t0_5(

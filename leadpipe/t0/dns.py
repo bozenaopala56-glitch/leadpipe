@@ -3,13 +3,15 @@ from __future__ import annotations
 import socket
 from typing import Any
 
+from .url import normalize_host
+
 
 def scan_dns(domain: str) -> dict[str, Any]:
     """A/AAAA/MX/TXT records.
     Zwraca: {has_a_record, has_mx, has_txt, ips: []}
     Uzywa socket.getaddrinfo + dns.resolver jesli dostepny.
     """
-    normalized = domain.strip().lower().removeprefix("http://").removeprefix("https://").split("/")[0]
+    normalized = normalize_host(domain)
     result: dict[str, Any] = {
         "has_a_record": False,
         "has_mx": False,
@@ -17,6 +19,9 @@ def scan_dns(domain: str) -> dict[str, Any]:
         "ips": [],
         "error": None,
     }
+    if not normalized:
+        result["error"] = "missing domain"
+        return result
 
     try:
         records = socket.getaddrinfo(normalized, None, type=socket.SOCK_STREAM)

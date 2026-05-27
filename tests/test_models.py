@@ -7,7 +7,7 @@ import pytest
 from pydantic import ValidationError
 
 from leadpipe.csv_schemas import FeedbackCsvSchema, ImportCsvSchema, parse_csv
-from leadpipe.engine import DecisionEngine
+from leadpipe.engine import Condition, DecisionEngine
 from leadpipe.models import (
     CampaignDecision,
     CampaignKey,
@@ -181,6 +181,14 @@ def test_decision_engine_t2_and_suppression_paths() -> None:
     suppressed, suppressed_trace = engine.evaluate(lead, {"suppressed": True})
     assert suppressed.action == "skip"
     assert suppressed_trace.blocked_by == ["GATE_COMPLIANCE_SUPPRESSION"]
+
+
+def test_decision_engine_conditions_are_type_safe_for_bad_signal_values() -> None:
+    engine = DecisionEngine()
+
+    assert engine._evaluate_condition(Condition(signal="score", operator="gte", value=1), {"score": "bad"})[0] is False
+    assert engine._evaluate_condition(Condition(signal="kind", operator="in", value=None), {"kind": "x"})[0] is False
+    assert engine._evaluate_condition(Condition(signal="tags", operator="contains", value="x"), {"tags": None})[0] is False
 
 
 def test_sample_leads_file_can_be_evaluated() -> None:

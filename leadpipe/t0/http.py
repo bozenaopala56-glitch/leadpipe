@@ -8,6 +8,8 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urljoin
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
+from .url import is_http_url, normalize_host
+
 
 class _NoRedirect(HTTPRedirectHandler):
     def http_error_301(self, req: Request, fp: HTTPResponse, code: int, msg: str, headers: Any) -> HTTPResponse:
@@ -17,6 +19,8 @@ class _NoRedirect(HTTPRedirectHandler):
 
 
 def _request_once(url: str, timeout: float) -> dict[str, Any]:
+    if not is_http_url(url):
+        return {"status_code": None, "url": url, "headers": {}, "elapsed_ms": 0, "error": "unsupported URL scheme"}
     request = Request(url, headers={"User-Agent": "leadpipe-t0/0.1"})
     opener = build_opener(_NoRedirect)
     started = time.perf_counter()
@@ -54,7 +58,18 @@ def scan_http(domain: str) -> dict[str, Any]:
     Zwraca: {status_code, final_url, https_available, redirect_count, headers}
     Obsluga: timeout 10s, retry 2x, 429 backoff.
     """
-    host = domain.strip().removeprefix("http://").removeprefix("https://").split("/")[0]
+    host = normalize_host(domain)
+    if not host:
+        return {
+            "status_code": None,
+            "final_url": None,
+            "https_available": False,
+            "http_redirects_to_https": False,
+            "redirect_count": 0,
+            "headers": {},
+            "transient_error": False,
+            "error": "missing domain",
+        }
     urls = [f"https://{host}", f"http://{host}"]
     last_error: str | None = None
     transient_error = False
@@ -86,6 +101,9 @@ def scan_http(domain: str) -> dict[str, Any]:
                 if not location:
                     break
                 location = urljoin(current_url, location)
+                if not is_http_url(location):
+                    last_error = "unsupported redirect URL scheme"
+                    break
                 current_url = location
                 redirect_count += 1
                 response = _request_once(current_url, timeout=10)

@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from leadpipe.models import Lead
 from leadpipe.t0_5 import run_t0_5
+from leadpipe.t0_5 import _cache_key
 from leadpipe.t0_5.cache import EnrichmentCache
 from leadpipe.t0_5.enrich_nip import extract_nips, is_valid_nip, normalize_nip
-from leadpipe.t0_5.enrich_vat import validate_vat_number
+from leadpipe.t0_5.enrich_nip import enrich_nip
+from leadpipe.t0_5.enrich_vat import enrich_vat, validate_vat_number
 
 
 def test_nip_checksum_and_extraction_ignores_phone_like_numbers() -> None:
@@ -54,3 +56,26 @@ def test_run_t0_5_merges_nip_regon_vat_and_address() -> None:
     assert enriched["enrichment"]["vat_status"] == "active"
     assert enriched["signals"]["nip_present"] is True
     assert enriched["signals"]["vat_active"] is True
+
+
+def test_t0_5_cache_key_is_stable_and_lookup_errors_are_soft() -> None:
+    lead = Lead(input_domain="example.pl", normalized_domain="example.pl", nip="1234563218")
+
+    assert _cache_key(lead, "<html>") == _cache_key(lead, "<html>")
+
+    def broken_lookup(_nip: str) -> dict[str, object]:
+        raise OSError("network down")
+
+    assert enrich_vat("1234563218", lookup=broken_lookup) == {"vat_valid": True, "vat_status": "unknown"}
+
+
+def test_nip_lookup_cannot_overwrite_valid_nip_with_invalid_value() -> None:
+    lead = Lead(input_domain="example.pl", normalized_domain="example.pl", nip="1234563218")
+
+    def lookup(_lead: Lead, _html_text: str) -> dict[str, object]:
+        return {"nip": "1234567890", "regon": "123"}
+
+    enriched = enrich_nip(lead, lookup=lookup)
+
+    assert enriched["nip"] == "1234563218"
+    assert enriched["regon"] == "123"

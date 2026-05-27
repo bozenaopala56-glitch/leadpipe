@@ -46,7 +46,10 @@ def enrich_vat(nip: str | None, lookup: Any | None = None) -> dict[str, Any]:
     normalized = normalize_nip(nip)
     if not normalized or not validate_vat_number(normalized):
         return {"vat_valid": False, "vat_status": "invalid"}
-    result = lookup(normalized) if lookup else lookup_vat_status(normalized)
+    try:
+        result = lookup(normalized) if lookup else lookup_vat_status(normalized)
+    except Exception:
+        return {"vat_valid": True, "vat_status": "unknown"}
     if not isinstance(result, dict):
         return {"vat_valid": True, "vat_status": "unknown"}
     return {"vat_valid": True, **result}
